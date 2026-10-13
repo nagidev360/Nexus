@@ -1,4 +1,4 @@
-import os, secrets
+import os, secrets, json, urllib.request, urllib.error
 from pathlib import Path
 from datetime import datetime, timedelta
 from functools import wraps
@@ -60,6 +60,34 @@ def admin_login():
   elif secrets.compare_digest(request.form.get("password",""),expected): session["is_admin"]=True;session.permanent=True;return redirect(url_for("admin_dashboard"))
   else: flash("Incorrect password.","error")
  return render_template("login.html")
+@app.post("/admin/supabase-login")
+def admin_supabase_login():
+ token=request.form.get("access_token","").strip()
+ supabase_url=os.environ.get("SUPABASE_URL","").rstrip("/")
+ supabase_key=os.environ.get("SUPABASE_PUBLISHABLE_KEY","")
+ super_admin_email=os.environ.get("SUPER_ADMIN_EMAIL","").strip().casefold()
+ if not token or not supabase_url or not supabase_key or not super_admin_email:
+  flash("Super-admin login is not configured. Contact the site owner.","error")
+  return redirect(url_for("admin_login"))
+ try:
+  req=urllib.request.Request(supabase_url+"/auth/v1/user",headers={"apikey":supabase_key,"Authorization":"Bearer "+token,"Accept":"application/json"})
+  with urllib.request.urlopen(req,timeout=8) as response:
+   user=json.loads(response.read().decode("utf-8"))
+  verified_email=str(user.get("email","")).casefold()
+  if not user.get("id") or verified_email != super_admin_email or not user.get("email_confirmed_at"):
+   abort(403)
+  session.clear()
+  session["is_admin"]=True
+  session["admin_role"]="super_admin"
+  session["admin_user_id"]=user["id"]
+  session["admin_email"]=verified_email
+  session.permanent=True
+  return redirect(url_for("admin_dashboard"))
+ except urllib.error.HTTPError:
+  flash("Your Nexus session could not be verified. Please sign in again.","error")
+ except (urllib.error.URLError,TimeoutError,ValueError):
+  flash("Could not verify your Nexus account right now. Try again.","error")
+ return redirect(url_for("admin_login"))
 @app.route("/admin/dashboard",methods=["GET","POST"])
 @admin_required
 def admin_dashboard():
