@@ -60,7 +60,13 @@ def protect_post_requests():
 
 @app.context_processor
 def inject_globals():
-    return {"site_name": "Nexus", "admin_logged_in": bool(session.get("is_admin")), "csrf_token": csrf_token}
+    return {
+        "site_name": "Nexus",
+        "admin_logged_in": bool(session.get("is_admin")),
+        "csrf_token": csrf_token,
+        "supabase_url": os.environ.get("SUPABASE_URL", "").rstrip("/"),
+        "supabase_publishable_key": os.environ.get("SUPABASE_PUBLISHABLE_KEY", ""),
+    }
 
 @app.route("/")
 def index():
@@ -88,6 +94,18 @@ def download(item_id):
     item.downloads += 1
     db.session.commit()
     return send_from_directory(UPLOAD_DIR, item.filename, as_attachment=True, download_name=secure_filename(item.filename))
+
+@app.route("/login")
+def user_login():
+    return render_template("auth_login.html")
+
+@app.route("/signup")
+def user_signup():
+    return render_template("auth_signup.html")
+
+@app.route("/auth/callback")
+def auth_callback():
+    return render_template("auth_callback.html")
 
 @app.route("/admin", methods=["GET", "POST"])
 def admin_login():
