@@ -1,7 +1,16 @@
-{% extends "base.html" %}{% block title %}Login — Nexus{% endblock %}{% block content %}
-<section class="form-card narrow auth-card"><div class="login-mark">N<span>.</span></div><div class="eyebrow">WELCOME BACK</div><h1>Log in to Nexus.</h1><p class="muted">Access your Nexus account with email or a connected account.</p>
+{% extends "base.html" %}{% block title %}Account — Nexus{% endblock %}{% block content %}
+<section class="form-card narrow auth-card auth-unified">
+<div class="login-mark">N<span>.</span></div><div class="eyebrow">NEXUS ACCOUNT</div>
+<h1 id="authTitle">Log in to Nexus.</h1><p class="muted" id="authSubtitle">Access your Nexus account with email or a connected account.</p>
+<div class="auth-tabs"><button type="button" class="auth-tab active" data-mode="login">Log in</button><button type="button" class="auth-tab" data-mode="signup">Sign up</button></div>
 <div class="auth-alert" id="authMessage" role="status" hidden></div>
-<form id="loginForm" class="auth-form"><label for="email">Email address</label><input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required><label for="password">Password</label><input id="password" name="password" type="password" placeholder="Your password" autocomplete="current-password" minlength="8" required><button class="full" type="submit">Log in <span>→</span></button></form>
-<div class="auth-divider"><span>or continue with</span></div><div class="oauth-grid"><button type="button" class="oauth-btn" data-provider="google">Google</button><button type="button" class="oauth-btn" data-provider="discord">Discord</button><button type="button" class="oauth-btn" data-provider="github">GitHub</button></div>
-<p class="login-foot">New to Nexus? <a href="{{ url_for('user_signup') }}">Create an account</a></p></section>
-{% endblock %}
+<form id="authForm" class="auth-form">
+<div id="nameField" hidden><label for="name">Display name <span class="optional">(optional)</span></label><input id="name" name="name" type="text" placeholder="Your name" autocomplete="name" maxlength="80"></div>
+<label for="email">Email address</label><input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
+<label for="password">Password</label><input id="password" name="password" type="password" placeholder="At least 8 characters" autocomplete="current-password" minlength="8" required>
+<button class="full" id="emailSubmit" type="submit">Log in →</button>
+</form>
+<div class="auth-divider"><span>or continue with</span></div>
+<div class="oauth-grid"><button type="button" class="oauth-btn" data-provider="google">Google</button><button type="button" class="oauth-btn" data-provider="discord">Discord</button><button type="button" class="oauth-btn" data-provider="github">GitHub</button></div>
+<p class="login-foot" id="authFoot"></p>
+</section>{% endblock %}
