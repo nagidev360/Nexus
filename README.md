@@ -1,35 +1,44 @@
 # Nexus
 
-Nexus is a Flask-based download catalog for Android APKs and Windows software.
+A responsive software catalog for Android APKs and Windows software, built with Flask, SQLAlchemy, and a custom responsive frontend.
 
-## Features
-- Searchable Android and Windows catalog
-- App details and download counters
-- Admin login and upload/delete dashboard
-- Upload support for APK, EXE, MSI, ZIP (500 MB maximum)
-- SQLite by default; PostgreSQL via DATABASE_URL
-- Render deployment blueprint and health endpoint
+## Current features
+- Responsive storefront and mobile navigation
+- Search and Android/Windows filters
+- Client-side sorting by newest, name, and download count
+- Software details, download counter, and share-listing action
+- Admin login, upload, listing management, and delete action
+- CSRF checks on POST forms and HTTP-only session cookies
+- Health endpoint at `/health`
+- APK, EXE, MSI, and ZIP upload allowlist; 500 MB request limit
+- SQLite by default or PostgreSQL via `DATABASE_URL`
 
-## Run locally
+## Local setup
+Requires Python 3.11+.
 ```bash
 python -m venv .venv
-# Windows: .venv\\Scripts\\activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows CMD: .venv\Scripts\activate.bat
 # macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
-set ADMIN_PASSWORD=change-this-password
-python -m flask --app app run
 ```
-Open http://127.0.0.1:5000 and visit /admin to manage uploads.
+Set environment variables before starting:
+- Windows CMD: `set ADMIN_PASSWORD=choose-a-long-password`
+- PowerShell: `$env:ADMIN_PASSWORD="choose-a-long-password"`
+- macOS/Linux: `export ADMIN_PASSWORD="choose-a-long-password"`
+
+Run: `python -m flask --app app run`. Open `http://127.0.0.1:5000`; admin portal is at `/admin`.
 
 ## Render deployment
-1. Connect this repository to Render and create a Python web service.
-2. Build command: `pip install -r requirements.txt`
-3. Start command: `gunicorn app:app`
-4. Set `ADMIN_PASSWORD` to a strong unique secret. Set `SECRET_KEY` to a long random value if not auto-generated.
-5. Configure a persistent disk mounted at `/var/data` and keep uploads there. For reliable production use, configure managed PostgreSQL in `DATABASE_URL` and object storage for downloads.
+The GitHub repository is connected to Render with automatic deploys. Build command: `pip install -r requirements.txt`; start command: `gunicorn app:app`; health check: `/health`.
 
-## Security notes
-- File extension checks are not malware scanning. Scan uploads before publishing and only distribute files you have rights to share.
-- Never commit passwords or API keys.
-- SQLite and local uploads are not durable on ephemeral hosting unless stored on a persistent disk.
-- For a public production service, add rate limiting, CSRF protection, audit logs, and an actual malware scanning pipeline before accepting public uploads.
+Set a unique `ADMIN_PASSWORD` and long random `SECRET_KEY` in the Render Environment page. Never commit these secrets.
+
+## Persistence setup still required before production
+Render Free web services use ephemeral filesystems. SQLite database files and uploaded binaries can disappear on restart/redeploy. For durable production data:
+1. Provision a persistent PostgreSQL database and set its connection URL as `DATABASE_URL`.
+2. Store uploaded binaries on persistent storage or object storage and set `UPLOAD_DIR` accordingly.
+3. Back up the database and test restore procedures.
+
+## Security / production limitations
+Extension checks are not malware scanning and do not prove a file is safe. Only publish software you are authorized to distribute. Before public launch, add automated malware scanning, rate limiting, audit logs, stronger upload validation, backups, and monitoring. This project is a working starter application, not a certified secure download marketplace.
