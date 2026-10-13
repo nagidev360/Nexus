@@ -1,6 +1,6 @@
 import os, secrets
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory, abort
 from flask_sqlalchemy import SQLAlchemy
@@ -9,7 +9,7 @@ BASE_DIR=Path(__file__).resolve().parent
 UPLOAD_DIR=Path(os.environ.get("UPLOAD_DIR","/var/data/uploads" if os.path.isdir("/var/data") else BASE_DIR/"uploads"));UPLOAD_DIR.mkdir(parents=True,exist_ok=True)
 ALLOWED={"apk","exe","msi","zip"}
 app=Flask(__name__);app.config["SECRET_KEY"]=os.environ.get("SECRET_KEY") or secrets.token_hex(32)
-app.config["SQLALCHEMY_DATABASE_URI"]=(os.environ.get("DATABASE_URL","").replace("postgres://","postgresql://",1) or "sqlite:///"+str(BASE_DIR/"nexus.db"));app.config["SQLALCHEMY_TRACK_MODIFICATIONS"]=False;app.config["MAX_CONTENT_LENGTH"]=500*1024*1024;app.config["SESSION_COOKIE_HTTPONLY"]=True;app.config["SESSION_COOKIE_SAMESITE"]="Lax";app.config["SESSION_COOKIE_SECURE"]=os.environ.get("RENDER","")=="true";db=SQLAlchemy(app)
+app.config["SQLALCHEMY_DATABASE_URI"]=(os.environ.get("DATABASE_URL","").replace("postgres://","postgresql://",1) or "sqlite:///"+str(BASE_DIR/"nexus.db"));app.config["SQLALCHEMY_TRACK_MODIFICATIONS"]=False;app.config["MAX_CONTENT_LENGTH"]=500*1024*1024;app.config["SESSION_COOKIE_HTTPONLY"]=True;app.config["SESSION_COOKIE_SAMESITE"]="Lax";app.config["SESSION_COOKIE_SECURE"]=os.environ.get("RENDER","")=="true";app.config["PERMANENT_SESSION_LIFETIME"]=timedelta(days=14);app.config["SESSION_REFRESH_EACH_REQUEST"]=True;db=SQLAlchemy(app)
 class AppItem(db.Model):
  id=db.Column(db.Integer,primary_key=True);name=db.Column(db.String(120),nullable=False);slug=db.Column(db.String(160),unique=True,nullable=False);description=db.Column(db.Text,nullable=False,default="");platform=db.Column(db.String(20),nullable=False,default="Android");version=db.Column(db.String(40),nullable=False,default="1.0.0");filename=db.Column(db.String(255),nullable=False);downloads=db.Column(db.Integer,nullable=False,default=0);created_at=db.Column(db.DateTime,default=datetime.utcnow)
 with app.app_context(): db.create_all()
@@ -57,7 +57,7 @@ def admin_login():
  if request.method=="POST":
   expected=os.environ.get("ADMIN_PASSWORD")
   if not expected: flash("Admin password is not configured. Set ADMIN_PASSWORD in Render environment settings.","error")
-  elif secrets.compare_digest(request.form.get("password",""),expected): session["is_admin"]=True;return redirect(url_for("admin_dashboard"))
+  elif secrets.compare_digest(request.form.get("password",""),expected): session["is_admin"]=True;session.permanent=True;return redirect(url_for("admin_dashboard"))
   else: flash("Incorrect password.","error")
  return render_template("login.html")
 @app.route("/admin/dashboard",methods=["GET","POST"])
