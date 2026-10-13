@@ -81,7 +81,9 @@
     try {
       const { error } = await client.auth.signInWithOAuth({
         provider: button.dataset.provider,
-        options: { redirectTo, queryParams: { prompt: "select_account" } }
+        options: button.dataset.provider === "google"
+          ? { redirectTo, queryParams: { prompt: "select_account" } }
+          : { redirectTo }
       });
       if (error) {
         button.disabled = false;
