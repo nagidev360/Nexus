@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block title %}Profile — Nexus{% endblock %}{% block content %}
+<section class="form-card auth-card" style="max-width:720px;margin:56px auto">
+<div class="eyebrow">YOUR ACCOUNT</div><h1>Your Profile</h1><p class="muted">Account details and connected sign-in methods.</p>
+<div id="profileMessage" class="auth-alert" hidden></div>
+<div class="profile-grid">
+<div><label>Email</label><p id="profileEmail" class="profile-value">Loading…</p></div>
+<div><label>Name</label><p id="profileName" class="profile-value">—</p></div>
+</div>
+<h2>Connect Account</h2><div class="oauth-grid"><button class="oauth-btn" data-provider="google">Google</button><button class="oauth-btn" data-provider="discord">Discord</button><button class="oauth-btn" data-provider="github">GitHub</button></div>
+<p class="muted" style="margin-top:16px">Connect an additional provider to this same Nexus account. Phone number is not included.</p>
+<button id="logout" class="full" style="margin-top:24px">Log out</button>
+</section>{% endblock %}
