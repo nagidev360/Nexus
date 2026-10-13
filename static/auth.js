@@ -82,7 +82,7 @@
       const { error } = await client.auth.signInWithOAuth({
         provider: button.dataset.provider,
         options: button.dataset.provider === "google"
-          ? { redirectTo, queryParams: { prompt: "select_account" } }
+          ? { redirectTo, queryParams: { prompt: "consent select_account" } }
           : { redirectTo }
       });
       if (error) {
