@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block title %}Sign up — Nexus{% endblock %}{% block content %}
+<section class="form-card narrow auth-card"><div class="login-mark">N<span>.</span></div><div class="eyebrow">JOIN THE NEXUS COMMUNITY</div><h1>Create your account.</h1><p class="muted">One account for your Nexus experience.</p>
+<div class="auth-alert" id="authMessage" role="status" hidden></div>
+<form id="signupForm" class="auth-form"><label for="name">Display name <span class="optional">(optional)</span></label><input id="name" name="name" type="text" placeholder="Your name" autocomplete="name" maxlength="80"><label for="email">Email address</label><input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required><label for="password">Password</label><input id="password" name="password" type="password" placeholder="At least 8 characters" autocomplete="new-password" minlength="8" required><button class="full" type="submit">Create account <span>→</span></button></form>
+<div class="auth-divider"><span>or sign up with</span></div><div class="oauth-grid"><button type="button" class="oauth-btn" data-provider="google">Google</button><button type="button" class="oauth-btn" data-provider="discord">Discord</button><button type="button" class="oauth-btn" data-provider="github">GitHub</button></div>
+<p class="login-foot">Already have an account? <a href="{{ url_for('user_login') }}">Log in</a></p></section>
+{% endblock %}
