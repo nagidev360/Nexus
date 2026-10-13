@@ -2,7 +2,7 @@ import os, secrets
 from pathlib import Path
 from datetime import datetime
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 
@@ -16,6 +16,9 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
 app.config["SQLALCHEMY_DATABASE_URI"] = (os.environ.get("DATABASE_URL", "").replace("postgres://", "postgresql://", 1) or "sqlite:///" + str(BASE_DIR / "nexus.db"))
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["MAX_CONTENT_LENGTH"] = 500 * 1024 * 1024
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = os.environ.get("RENDER", "") == "true"
 db = SQLAlchemy(app)
 
 class AppItem(db.Model):
@@ -40,9 +43,24 @@ def admin_required(fn):
         return fn(*args, **kwargs)
     return wrapped
 
+def csrf_token():
+    token = session.get("_csrf_token")
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session["_csrf_token"] = token
+    return token
+
+@app.before_request
+def protect_post_requests():
+    if request.method == "POST":
+        expected = session.get("_csrf_token", "")
+        supplied = request.form.get("_csrf_token", "")
+        if not expected or not supplied or not secrets.compare_digest(expected, supplied):
+            abort(400, description="Your form session expired. Refresh the page and try again.")
+
 @app.context_processor
 def inject_globals():
-    return {"site_name": "Nexus", "admin_logged_in": bool(session.get("is_admin"))}
+    return {"site_name": "Nexus", "admin_logged_in": bool(session.get("is_admin")), "csrf_token": csrf_token}
 
 @app.route("/")
 def index():
@@ -123,13 +141,33 @@ def delete_item(item_id):
 
 @app.route("/admin/logout", methods=["POST"])
 def admin_logout():
+    if not session.get("is_admin"):
+        abort(403)
     session.clear()
     return redirect(url_for("index"))
 
+@app.errorhandler(400)
+def bad_request(error):
+    return (render_template("error.html", code=400, message=getattr(error, "description", "Bad request.")), 400)
+
+@app.errorhandler(403)
+def forbidden(_):
+    return (render_template("error.html", code=403, message="You do not have permission to access this page."), 403)
+
+@app.errorhandler(404)
+def not_found(_):
+    return (render_template("error.html", code=404, message="We could not find that page or download."), 404)
+
 @app.errorhandler(413)
 def too_large(_):
-    return "File too large. Maximum upload size is 500 MB.", 413
+    return (render_template("error.html", code=413, message="File too large. Maximum upload size is 500 MB."), 413)
 
 @app.route("/health")
 def health():
-    return {"status": "ok", "app": "Nexus"}
+    try:
+        db.session.execute(db.text("SELECT 1"))
+        database = "ok"
+    except Exception:
+        db.session.rollback()
+        database = "error"
+    return {"status": "ok" if database == "ok" else "degraded", "app": "Nexus", "database": database}
