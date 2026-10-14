@@ -45,7 +45,10 @@ def index():
  if platform in ("Android","Windows"): query=query.filter_by(platform=platform)
  return render_template("index.html",items=query.order_by(AppItem.created_at.desc()).all(),q=term,platform=platform)
 @app.route("/app/<int:item_id>")
-def detail(item_id): return render_template("detail.html",item=db.get_or_404(AppItem,item_id))
+def detail(item_id):
+ item=db.get_or_404(AppItem,item_id)
+ path=UPLOAD_DIR/item.filename
+ return render_template("detail.html",item=item,file_size=path.stat().st_size if path.is_file() else None)
 @app.route("/download/<int:item_id>")
 def download(item_id):
  item=db.get_or_404(AppItem,item_id);path=UPLOAD_DIR/item.filename
