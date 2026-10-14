@@ -11,8 +11,15 @@ ALLOWED={"apk","exe","msi","zip"}
 app=Flask(__name__);app.config["SECRET_KEY"]=os.environ.get("SECRET_KEY") or secrets.token_hex(32)
 app.config["SQLALCHEMY_DATABASE_URI"]=(os.environ.get("DATABASE_URL","").replace("postgres://","postgresql://",1) or "sqlite:///"+str(BASE_DIR/"nexus.db"));app.config["SQLALCHEMY_TRACK_MODIFICATIONS"]=False;app.config["MAX_CONTENT_LENGTH"]=500*1024*1024;app.config["SESSION_COOKIE_HTTPONLY"]=True;app.config["SESSION_COOKIE_SAMESITE"]="Lax";app.config["SESSION_COOKIE_SECURE"]=os.environ.get("RENDER","")=="true";app.config["PERMANENT_SESSION_LIFETIME"]=timedelta(days=14);app.config["SESSION_REFRESH_EACH_REQUEST"]=True;db=SQLAlchemy(app)
 class AppItem(db.Model):
- id=db.Column(db.Integer,primary_key=True);name=db.Column(db.String(120),nullable=False);slug=db.Column(db.String(160),unique=True,nullable=False);description=db.Column(db.Text,nullable=False,default="");platform=db.Column(db.String(20),nullable=False,default="Android");version=db.Column(db.String(40),nullable=False,default="1.0.0");filename=db.Column(db.String(255),nullable=False);downloads=db.Column(db.Integer,nullable=False,default=0);created_at=db.Column(db.DateTime,default=datetime.utcnow)
-with app.app_context(): db.create_all()
+ id=db.Column(db.Integer,primary_key=True);name=db.Column(db.String(120),nullable=False);slug=db.Column(db.String(160),unique=True,nullable=False);description=db.Column(db.Text,nullable=False,default="");platform=db.Column(db.String(20),nullable=False,default="Android");version=db.Column(db.String(40),nullable=False,default="1.0.0");filename=db.Column(db.String(255),nullable=False);downloads=db.Column(db.Integer,nullable=False,default=0);created_at=db.Column(db.DateTime,default=datetime.utcnow);publisher=db.Column(db.String(160),nullable=True);category=db.Column(db.String(100),nullable=True);icon_url=db.Column(db.String(1000),nullable=True);mod_info=db.Column(db.String(300),nullable=True);play_store_url=db.Column(db.String(1000),nullable=True)
+with app.app_context():
+ db.create_all()
+ # Add optional metadata columns to existing installations without dropping or rewriting records.
+ from sqlalchemy import inspect
+ existing={col["name"] for col in inspect(db.engine).get_columns("app_item")}
+ for column, sql_type in (("publisher","VARCHAR(160)"),("category","VARCHAR(100)"),("icon_url","VARCHAR(1000)"),("mod_info","VARCHAR(300)"),("play_store_url","VARCHAR(1000)")):
+  if column not in existing:
+   with db.engine.begin() as conn: conn.exec_driver_sql(f"ALTER TABLE app_item ADD COLUMN {column} {sql_type}")
 def admin_required(fn):
  @wraps(fn)
  def wrapped(*a,**kw):
@@ -95,7 +102,7 @@ def admin_dashboard():
   file=request.files.get("file");name=request.form.get("name","").strip();ext=(file.filename.rsplit(".",1)[-1].lower() if file and "." in file.filename else "")
   if not name or not file or not file.filename or ext not in ALLOWED: flash("Enter an app name and upload APK, EXE, MSI, or ZIP file.","error");return redirect(url_for("admin_dashboard"))
   safe_name=secure_filename(file.filename);stored=secrets.token_hex(8)+"_"+safe_name;file.save(UPLOAD_DIR/stored)
-  item=AppItem(name=name[:120],slug=secrets.token_hex(5),description=request.form.get("description","")[:5000],platform=request.form.get("platform","Android") if request.form.get("platform") in ("Android","Windows") else "Android",version=request.form.get("version","1.0.0")[:40],filename=stored)
+  item=AppItem(name=name[:120],slug=secrets.token_hex(5),description=request.form.get("description","")[:5000],platform=request.form.get("platform","Android") if request.form.get("platform") in ("Android","Windows") else "Android",version=request.form.get("version","1.0.0")[:40],filename=stored,publisher=request.form.get("publisher","").strip()[:160] or None,category=request.form.get("category","").strip()[:100] or None,icon_url=request.form.get("icon_url","").strip()[:1000] or None,mod_info=request.form.get("mod_info","").strip()[:300] or None,play_store_url=request.form.get("play_store_url","").strip()[:1000] or None)
   db.session.add(item);db.session.commit();flash("Upload published.","success");return redirect(url_for("admin_dashboard"))
  return render_template("admin.html",items=AppItem.query.order_by(AppItem.created_at.desc()).all())
 @app.post("/admin/delete/<int:item_id>")
