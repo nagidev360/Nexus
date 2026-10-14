@@ -41,3 +41,20 @@
 .featured-download span{display:grid;place-items:center;width:25px;height:25px;border:1px solid #61e2d44a;border-radius:8px;color:#61e2d4;font-size:15px}
 @media(max-width:850px){.featured-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.discovery-categories{grid-template-columns:1fr}.discovery-categories>a{padding:14px}}
 @media(max-width:480px){.discovery-heading h2{font-size:27px}.featured-grid{gap:9px}.featured-card-link{padding:12px 12px 9px}.featured-card h4{font-size:13px}.featured-card p{font-size:10px}.featured-download{padding:9px 12px}.featured-heading h3{font-size:20px}}
+
+/* Modyolo-inspired app details, using only stored metadata and actual file size */
+.modyolo-detail{max-width:820px;padding:clamp(20px,4vw,36px)}
+.real-app-icon{object-fit:cover;background:#182236}
+.detail-download-count{margin:5px 0 0;color:#8f9db3;font-size:11px}
+.detail-quickfacts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 22px}
+.detail-quickfacts>div{padding:13px;border:1px solid #ffffff12;background:#ffffff03;border-radius:11px;min-width:0}
+.detail-quickfacts span,.detail-quickfacts strong{display:block}
+.detail-quickfacts span{font-size:9px;letter-spacing:1px;color:#8795ad;margin-bottom:7px}
+.detail-quickfacts strong{font-size:12px;overflow-wrap:anywhere}
+.mod-info{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:13px 15px;margin:5px 0 20px;border:1px solid #64d9b733;background:#61e2d40c;border-radius:11px}
+.mod-label{font-size:10px;letter-spacing:1px;color:#61e2d4;font-weight:800}
+.mod-info strong{font-size:12px;color:#d7fff7}
+.play-store-link{display:inline-flex;align-items:center;gap:9px;color:#bdb2ff;font-size:12px;font-weight:700;margin-top:18px}
+.play-store-link span{font-size:16px}
+.detail-download-button{min-height:48px;flex:1;font-size:14px}
+@media(max-width:620px){.detail-quickfacts{grid-template-columns:repeat(2,minmax(0,1fr))}.modyolo-detail .detail-top{gap:14px}.modyolo-detail .detail-heading h1{font-size:24px}.detail-download-button{flex-basis:100%}}
