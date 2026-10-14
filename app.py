@@ -106,7 +106,11 @@ def admin_dashboard():
   if not name or not file or not file.filename or ext not in ALLOWED: flash("Enter an app name and upload APK, EXE, MSI, or ZIP file.","error");return redirect(url_for("admin_dashboard"))
   # Use the app title for a readable stored filename instead of a random hash or client filename.
   extension=ext
-  base=secure_filename(name)[:100].strip("._-") or "app"
+  base=secure_filename(name)[:94].strip("._-") or "app"
+  # Prefix every stored upload with Nexus branding.
+  if base.casefold().startswith("nexus-"):
+   base=base[6:] or "app"
+  base="Nexus-"+base
   stored=f"{base}.{extension}"
   suffix=2
   while (UPLOAD_DIR/stored).exists():
