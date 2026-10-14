@@ -104,7 +104,15 @@ def admin_dashboard():
  if request.method=="POST":
   file=request.files.get("file");name=request.form.get("name","").strip();ext=(file.filename.rsplit(".",1)[-1].lower() if file and "." in file.filename else "")
   if not name or not file or not file.filename or ext not in ALLOWED: flash("Enter an app name and upload APK, EXE, MSI, or ZIP file.","error");return redirect(url_for("admin_dashboard"))
-  safe_name=secure_filename(file.filename);stored=secrets.token_hex(8)+"_"+safe_name;file.save(UPLOAD_DIR/stored)
+  # Use the app title for a readable stored filename instead of a random hash or client filename.
+  extension=ext
+  base=secure_filename(name)[:100].strip("._-") or "app"
+  stored=f"{base}.{extension}"
+  suffix=2
+  while (UPLOAD_DIR/stored).exists():
+   stored=f"{base}-{suffix}.{extension}"
+   suffix+=1
+  file.save(UPLOAD_DIR/stored)
   item=AppItem(name=name[:120],slug=secrets.token_hex(5),description=request.form.get("description","")[:5000],platform=request.form.get("platform","Android") if request.form.get("platform") in ("Android","Windows") else "Android",version=request.form.get("version","1.0.0")[:40],filename=stored,publisher=request.form.get("publisher","").strip()[:160] or None,category=request.form.get("category","").strip()[:100] or None,icon_url=request.form.get("icon_url","").strip()[:1000] or None,mod_info=request.form.get("mod_info","").strip()[:300] or None,play_store_url=request.form.get("play_store_url","").strip()[:1000] or None)
   db.session.add(item);db.session.commit();flash("Upload published.","success");return redirect(url_for("admin_dashboard"))
  return render_template("admin.html",items=AppItem.query.order_by(AppItem.created_at.desc()).all())
