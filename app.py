@@ -139,6 +139,10 @@ def forbidden(_): return render_template("error.html",code=403,message="You do n
 def not_found(_): return render_template("error.html",code=404,message="We could not find that page or download."),404
 @app.errorhandler(413)
 def too_large(_): return render_template("error.html",code=413,message="File too large. Maximum upload size is 500 MB."),413
+@app.route("/robots.txt")
+def robots_txt():
+ from flask import Response
+ return Response("User-agent: OAI-AdsBot\nAllow: /\n\nUser-agent: OAI-SearchBot\nAllow: /\n\n", mimetype="text/plain")
 @app.route("/health")
 def health():
  try: db.session.execute(db.text("SELECT 1"));database="ok"
