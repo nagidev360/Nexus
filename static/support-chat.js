@@ -34,13 +34,13 @@
   ];
   function addMessage(text,who){const el=document.createElement("div");el.className="nsc-msg "+who;el.textContent=text;messages.appendChild(el);messages.scrollTop=messages.scrollHeight;}
   function answer(question){
-    const q=question.toLowerCase();
+    const q=question.toLowerCase().replace(/[^a-z0-9\\s]/g," ").replace(/\\s+/g," ").trim();
     const found=faqs.find(([title])=>title.toLowerCase().split(/[^a-z]+/).filter(w=>w.length>3).some(w=>q.includes(w)));
-    if(/download|install|apk/.test(q)) return faqs[0][1];
-    if(/error|fail|broken|problem|not work/.test(q)) return faqs[1][1];
-    if(/official|safe|virus|trust/.test(q)) return faqs[2][1];
+    if(/download|install|apk|how do i download/.test(q)) return faqs[0][1];
+    if(/error|fail|broken|problem|not work|working/.test(q)) return faqs[1][1];
+    if(/official|safe|virus|trust|app store/.test(q)) return faqs[2][1];
     if(/report|contact|support|help|discord/.test(q)) return faqs[3][1];
-    if(/upload|publish|add app/.test(q)) return faqs[4][1];
+    if(/upload|publish|add app|software/.test(q)) return faqs[4][1];
     if(found) return found[1];
     return "I can help with downloads, download errors, safety, reporting issues, and publisher access. Choose a topic below or contact our support team on Discord.";
   }
