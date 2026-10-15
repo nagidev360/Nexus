@@ -22,4 +22,4 @@ if (window.supabase && window.NEXUS_SUPABASE_CONFIG.url && window.NEXUS_SUPABASE
   window.nexusSupabase.auth.getSession().then(({ data }) => syncNexusAccountLink(data?.session || null));
   window.nexusSupabase.auth.onAuthStateChange((_event, session) => syncNexusAccountLink(session));
 }</script>
-<script src="{{ url_for('static',filename='app.js') }}" defer></script><script src="{{ url_for('static',filename='auth.js') }}" defer></script><script src="{{ url_for('static',filename='profile.js') }}" defer></script></body></html>
+<script src="{{ url_for('static',filename='app.js') }}" defer></script><script src="{{ url_for('static',filename='support-chat.js') }}" defer></script><script src="{{ url_for('static',filename='auth.js') }}" defer></script><script src="{{ url_for('static',filename='profile.js') }}" defer></script></body></html>
